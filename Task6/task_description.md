@@ -23,10 +23,10 @@ A correct input line must be in one of the following formats:
   Creates a new modulo counter with number <C> with parameters <P> and <M>.
   
 • F (C) (P)
-  Creates a new Fibonacci counter with number <C> with parameter <P>.
+  Creates a new Fibonacci counter with number <C> with parameter <P>
   
 • G (C) (P)
-  Creates a new geometric-decimal counter with number <C> with parameter <P>.
+  Creates a new geometric-decimal counter with number <C> with parameter <P>
   
 • D (C)
   Deletes the counter with number <C>.
