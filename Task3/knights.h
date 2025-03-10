@@ -140,6 +140,9 @@ class Tournament {
 public:
     using knight_list = std::list<Knight>;
 
+    template<typename T>
+    struct dependent_false : std::false_type {};
+
     template <typename Container>
     Tournament(const Container& knights) {
         if constexpr (requires { knights.begin(); knights.end(); })
@@ -148,13 +151,13 @@ public:
             for (size_t i = 0; i < knights.size(); i++)
                 contestants.push_back(knights[i]);
         else
-            static_assert(false, "Container type not supported by Tournament.");
+            static_assert(dependent_false<Container>::value, "Container type not supported by Tournament.");
 
         if (contestants.empty())
             contestants.push_back(TRAINEE_KNIGHT);
     }
 
-    Tournament(const knight_list &knights) : contestants(knights) {
+    Tournament(std::initializer_list<Knight> knights) : contestants(knights) {
         if (contestants.empty())
             contestants.push_back(TRAINEE_KNIGHT);
     }
@@ -248,7 +251,7 @@ consteval std::pair<size_t, size_t> max_diff_classes(Container knights) {
         const size_t tmp = max_diff.second > max_diff.first
                                 ? max_diff.second - max_diff.first
                                 : max_diff.first - max_diff.second;
-        if (diff > tmp)
+        if (diff >= tmp)
             max_diff = std::make_pair(knight.get_weapon_class(), knight.get_armour_class());
     }
     return max_diff;
