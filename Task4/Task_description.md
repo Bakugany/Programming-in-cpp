@@ -65,6 +65,3 @@ You must implement a binary function cross that performs the multiplication of p
 
 where p and q are polynomials in n and m variables respectively, and the resulting polynomial has n + m variables.
 
-Additional Requirements
-
-  - All defined constructors, methods, or functions should be constexpr, meaning that they must be usable at compile time.   - It can be assumed that the coefficient type T, if it is not a poly type, provides a default constructor that creates the zero element, a copy and move constructor, an assignment operator, the operators +=, -=, *=, the binary operators +, -, *, and the unary operator -.   - Helper definitions should be hidden from the public interface. Since the solution is provided in a header file, the definitions should be hidden in a namespace, for example named detail.
