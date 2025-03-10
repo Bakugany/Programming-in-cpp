@@ -1,63 +1,132 @@
-In order to facilitate their exam preparation, a group of computer science students decided to systematize the way they collect notes by using a binder. For this method to be practical and truly systematic, the students agreed that the binders they use must meet certain basic requirements.
+# Binder
 
-The format of the note content should not be predetermined (after all, some students take handwritten notes during classes, while others prefer to use electronic devices), but it must be consistent within a single binder. Additionally, each note should be visibly marked with a (binder-unique) tab to facilitate its retrieval.
+## Introduction
 
-You are required to implement a binder class template available in the cxx namespace with the following declaration:
+Students are expected to learn:
 
-namespace cxx { template <typename K, typename V> class binder; }
+- Exception safety levels,
+- Schemes that ensure at least strong exception safety,
+- Memory management using smart pointers,
+- Techniques for implementing copy-on-write semantics when modifying objects.
 
-Here, the key type (tab) K is expected to have value semantics, meaning that a default constructor, copy constructor, move constructor, assignment operators, and destructor are available. A linear order is defined on type K, allowing any comparisons between objects of this type. For type V (the note's content), the only assumption is that it has a public copy constructor and a public destructor.
+## Task
 
-Students are eager to share notes. Since they are generally frugal, they prefer to use the same binder rather than creating a new physical copy. However, the situation changes when one of the users of the shared binder decides to make modifications. In this case, so as not to hinder the learning of their peers, the student must go to the copy machine and create his or her own copy of the binder.
+To facilitate study for exams, a group of computer science students decided to systematize the way they collect lecture notes using a binder. For this method to be practical and truly organized, the binders they use must meet some basic requirements.
 
-Formally, the container used should implement copy-on-write semantics.
+The format of the notes' content should not be predetermined (after all, some students take handwritten notes during classes while others prefer using electronic devices), but it must be consistent within a single binder. Additionally, each note must be visibly marked with a tab (unique within a binder) to aid in retrieval.
 
-Copy-on-write is an optimization technique widely applied, among others, in data structures from the Qt library and formerly in implementations of std::string. Its basic idea is that when an object is copied (in C++ via a copy constructor or assignment operator), it shares all of its internal resources (which might be stored in a separate dynamically allocated object) with the original object. This state persists until one of the copies needs to be modified. At that point, the object being modified creates its own copy of the resources that will be modified.
+You are required to implement a class template `binder` available in the namespace `cxx` with the following declaration:
 
-To facilitate efficient collection and modification of notes, the binder class should provide the following operations. Each operation's time complexity (assuming no copying is needed) is given below. The time complexity for copying the binder is O(n log n), where n denotes the number of stored notes. All operations must guarantee at least a strong exception safety guarantee, and wherever possible and desirable (for example, the move constructor and destructor), they must be marked noexcept.
-Constructors: a parameterless constructor creating an empty binder, a copy constructor, and a move constructor. Complexity O(1).
+```cpp
+namespace cxx {
+  template <typename K, typename V> class binder;
+}
+```
 
+The key type (the tab) `K` must have value semantics, which means that a default (no-argument) constructor, copy constructor, move constructor, copy and move assignment operators, and destructor are available. A linear order is defined on type `K` and all standard comparisons can be performed on its objects. For the value type `V` (the note content), it is only assumed that it has a public copy constructor and a public destructor.
+
+Students are eager to share their notes. However, since they are generally frugal, they prefer to share the same binder rather than creating a new physical copy. The situation changes when one of the users of a shared binder decides to make modifications. In that case, to avoid hindering their classmates’ studies, the student must go to the copier and create their own copy of the binder.
+
+Formally, the container used should implement copy-on-write semantics. Copy-on-write is a widely used optimization technique, for example in data structures from the Qt library and previously in std::string implementations. The basic idea is that when an object is copied (using the copy constructor or assignment operator), the copies share all internal resources (which may be stored in a separate heap object) with the original. This state persists until one of the copies needs to be modified. At that point, the modifying object makes its own copy of the resources before performing the modification.
+
+## Binder Operations
+
+The class `binder` should provide the following operations. For each operation, the indicated time complexity applies assuming that no copy is required. The time complexity for copying the entire binder is O(n log n), where *n* is the number of stored notes. All operations must ensure at least strong exception safety, and where possible and appropriate (for example, the move constructor and destructor) they must not throw exceptions.
+
+### Constructors
+
+- **Default Constructor:**  
+  ```cpp
   binder();
+  ```  
+  Creates an empty binder. Complexity: O(1)
+
+- **Copy Constructor and Move Constructor:**  
+  ```cpp
   binder(binder const &);
   binder(binder &&);
+  ```  
+  Complexity: O(1)
 
-Assignment operator, which takes its argument by value. Complexity O(1)
-plus the time for destroying the overwritten object.
+### Assignment Operator
 
+- **Assignment Operator** (taking the argument by value):  
+  ```cpp
   binder & operator=(binder);
+  ```  
+  Complexity: O(1) plus the time for destroying the overwritten object.
 
-The insert_front method inserts a note with the given tab at the beginning of the binder. To maintain tab uniqueness, it is not allowed to insert a note with a tab that is already present in the binder – in such a case, the method throws std::invalid_argument. Complexity O(log n).
+### Insertion Methods
 
+- **insert_front:**  
+  ```cpp
   void insert_front(K const &k, V const &v);
+  ```  
+  Inserts a note with tab `k` at the front of the binder. To maintain uniqueness of tabs, it is not allowed to insert a note with a tab that is already in use in the binder – in that case, the method throws a `std::invalid_argument` exception. Complexity: O(log n)
 
-The insert_after method allows you to place a note with the given tab k directly after the note with the tab prev_k. This method behaves similarly to insert_front, but it also throws std::invalid_argument when the tab prev_k cannot be found in the binder. Complexity O(log n).
-
+- **insert_after:**  
+  ```cpp
   void insert_after(K const &prev_k, K const &k, V const &v);
+  ```  
+  Inserts a note with tab `k` directly after the note with tab `prev_k`. This method behaves similarly to `insert_front` but also throws a `std::invalid_argument` exception if the tab `prev_k` cannot be found in the binder. Complexity: O(log n)
 
-The parameterless remove method deletes the first note in the binder. If the binder is empty, it throws std::invalid_argument. Complexity O(log n).
+### Removal Methods
 
+- **remove (without parameters):**  
+  ```cpp
   void remove();
+  ```  
+  Removes the first note from the binder. Throws `std::invalid_argument` if the binder is empty. Complexity: O(log n)
 
-The single-parameter remove method deletes from the binder the note with the specified tab. If no such note exists, it throws std::invalid_argument. Complexity O(log n).
-
+- **remove (with a key parameter):**  
+  ```cpp
   void remove(K const &);
+  ```  
+  Removes the note with the given tab. Throws `std::invalid_argument` if such a note does not exist in the binder. Complexity: O(log n)
 
-The single-parameter read methods return a reference to the note labeled with the provided tab. In the non-const version, the returned reference should allow modification of the note. A modifying operation on the binder may invalidate the returned reference. If a note with the specified tab does not exist in the binder, the method throws std::invalid_argument. Complexity O(log n).
+### Read Methods
 
+- **read:**  
+  ```cpp
   V & read(K const &);
   V const & read(K const &) const;
+  ```  
+  Returns a reference to the note marked with the given tab. In the non-const version, the returned reference should allow modification of the note. A modifying operation on the binder may invalidate the returned reference. Throws `std::invalid_argument` if a note with the given tab does not exist. Complexity: O(log n)
 
-The size method returns the number of notes in the binder. Complexity O(1).
+### Size Method
 
+- **size:**  
+  ```cpp
   size_t size() const;
+  ```  
+  Returns the number of notes in the binder. Complexity: O(1)
 
-The clear method empties the binder (preparing it for the next semester), meaning it removes all notes. Complexity O(n).
+### Clear Method
 
+- **clear:**  
+  ```cpp
   void clear();
-  Finally, in establishing a consistent format for binders, the students agreed that it need not provide any methods other than those listed above (for instance, methods for searching tabs without throwing exceptions – at most, a colleague unaware of them might experience difficulties in quickly searching through the diligently prepared binder). Your task is to assist these students by creating an implementation of a binder that meets all the specified requirements.
+  ```  
+  Empties the binder (preparing it for the next semester) by removing all notes. Complexity: O(n)
 
-Where possible and justified, methods should be qualified with const and noexcept.
+### Iterators
 
-An instance of the binder class should store only a single copy of the inserted tabs and notes.
+To allow quick reviewing of all notes (for example, when studying for an exam), the binder should support efficient paging through its contents by providing:
 
-The binder class should be exception-transparent, meaning that it should propagate any exceptions thrown by the functions it calls and by operations on its member components, and the observable state of the object should remain unchanged. In particular, modifying operations that fail must not invalidate iterators.
+- A `const_iterator` type along with the methods `cbegin` and `cend`.
+- Iterator operations that include:
+  - Assignment (`=`),
+  - Comparisons (`==` and `!=`),
+  - Both prefix and postfix increment (`++`),
+  - Dereference (`*`) and member access (`->`).
+- The iterators should allow browsing the notes in the order they appear in the binder. If no copy of the binder has occurred, the iterator remains valid.
+- The iterator must satisfy the requirements of a `std::forward_iterator`. All iterator operations must have O(1) time complexity.
+- The iterator is meant solely for reading notes and cannot be used to modify the binder; hence, it behaves like a standard library `const_iterator`.
+
+## Additional Requirements
+
+- Wherever possible and justified, methods should be qualified with `const` and `noexcept`.
+- Each `binder` object must store only one copy of the inserted tabs and notes.
+- The `binder` class should be transparent to exceptions; that is, it should let exceptions thrown by called functions or by operations on its members propagate, and the observable state of the object must not change. In particular, modifying operations that fail must not invalidate iterators.
+
+This concludes the specification for the Binder module.
