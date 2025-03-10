@@ -1,67 +1,120 @@
-The goal of this task is to implement a ring of multivariate polynomials. You are required to implement the following class template:
+# Polynomials
 
-  template <typename T, std::size_t N = 0> class poly;
+## Introduction
 
-An object of this class represents a univariate polynomial   a₀ + a₁x + a₂x² + … + aₙ₋₁xⁿ⁻¹, where the coefficients aᵢ are of type T. The number N is called the size of the polynomial (to avoid saying degree plus one). The type T should be a ring, meaning that binary operations +, -, * and the unary - are defined on it, and the default constructor should yield the value corresponding to zero.
+In this assignment, students are expected to learn and practice:
 
-To represent multivariate polynomials, the type T should again be a polynomial, meaning that it is of type poly. In general, to represent a polynomial in m variables we use the poly class recursively down to a depth of m, and the final type T is no longer of type poly, for example:
+- Templates and their specialization as well as partial specialization;
+- Techniques for manipulating types and data at compile time;
+- The use of `constexpr` and the increasing prevalence of `constexpr` in the standard library (e.g., `std::max` since C++14);
+- Techniques for handling templates with a variable number of arguments;
+- Standard library facilities that assist with the above, such as `<type_traits>`;
+- The idea of perfect forwarding (using `&&` and `std::forward`);
+- Certain types and functions used in metaprogramming, e.g., `std::conditional`, `std::enable_if`;
+- The mechanism of class template argument deduction (since C++17), along with the definition of custom deduction guides;
+- Basic concepts on C++ concepts;
+- Overloading of functions, operators, and constructors.
 
-  poly<poly<poly<int, 3>, 2>, 4>
+## Task
 
-represents a polynomial in three variables over the type int. A polynomial of m variables is thought of as a function of the variables x₁, …, xₘ in the following way. The outermost definition is a polynomial in the variable x₁, whose coefficients are polynomials in the variables from x₂ to xₘ. The coefficient type is a polynomial in the variable x₂ with coefficients that are polynomials in the variables from x₃ to xₘ, and so on.
+The aim of this assignment is to implement support for the ring of multivariate polynomials. You are required to implement the following class template:
 
-Constructors
+```cpp
+template <typename T, std::size_t N = 0> class poly;
+```
 
-You need to implement the following constructors for the poly class.
-1. The default constructor, which creates a polynomial identically equal to zero.
-2. The copy and move constructors (single-argument versions), whose argument is respectively of type const poly<U, M>& or poly<U, M>&&, where M ≤ N, and the type U is convertible to type T.
-3. The converting constructor (single-argument), with an argument of a type convertible to T, that creates a polynomial of size 1.
-4. The variadic constructor (two or more arguments), which creates a polynomial with coefficients equal to the subsequent argument values. The number of arguments should be no greater than the size of the polynomial N, and the type of each argument should be an r-reference to a type convertible to T. The use of “perfect forwarding” is required, see std::forward.
-You should refer to the std::is_convertible template and the std::convertible_to concept.
+An object of this class represents a univariate polynomial of the form:
+  
+  a₀ + a₁x + a₂x² + … + aₙ₋₁xⁿ⁻¹
 
-The above constructors do not allow the creation of a polynomial of size one (i.e. a constant polynomial) whose single coefficient is itself a polynomial. Therefore, you must implement a function const_poly, whose argument is a polynomial p (an object of type poly) and that returns a polynomial of size one, whose single coefficient is p.
+where the coefficients aᵢ are of type T. The number N is called the *size* of the polynomial (i.e., degree plus one). The type T should represent a ring, meaning that the binary operators `+`, `-`, `*` and the unary operator `-` must be defined for it, and its default constructor should yield the element corresponding to zero.
 
-Additionally, you should write the appropriate deduction guides so that it is possible to create poly objects without specifying template arguments (see the example).
+To represent multivariate polynomials, T itself should be a polynomial type. In general, to represent a polynomial in *m* variables, the `poly` class is used recursively up to a depth of *m*, where the final type T is not a `poly`. For example:
 
-Assignment Operators
+```cpp
+poly< poly< poly<int, 3>, 2>, 4>
+```
 
-You must implement copy and move assignment operators, whose argument is respectively of type const poly<U, M>& or poly<U, M>&&, where M ≤ N, and the type U is convertible to type T.
+represents a polynomial in three variables over the type `int`. A polynomial in *m* variables is thought of as a function in the variables x₁, …, xₘ in the following way: the outermost definition is a polynomial in x₁ with coefficients that are polynomials in the variables x₂ to xₘ; the coefficient type is a polynomial in x₂ with coefficients that are polynomials in x₃ to xₘ, and so on.
 
-Arithmetic Operators
+## Constructors
 
-You need to implement the operators +=, -=, *=. The argument for the += and -= operators may be a polynomial; in that case, its type is const poly<U, M>&, where M ≤ N, and the type U is convertible to type T. The argument for all three operators may also be a constant reference to a value of a type convertible to T.
+You must implement the following constructors for the `poly` class:
 
-You must implement the operators +, -, * in their binary versions, and the unary operator -. In the binary version, three usage variants should be possible by enforcing the appropriate concept:
+1. **Default Constructor:**  
+   Creates a polynomial that is identically zero.
 
-  1. Only the left argument is a polynomial.   2. Only the right argument is a polynomial.   3. Both arguments are polynomials.
+2. **Copy/Move Constructor (Single-Argument):**  
+   Implement copy and move constructors taking an argument of type `const poly<U, M>&` or `poly<U, M>&&`, respectively, where M ≤ N and type U is convertible to type T.
 
-The resulting type should be the smallest type that always accommodates the resulting polynomial and can be deduced at compile time. In the case of addition or subtraction, the size of the result with respect to a given variable should be the maximum of the sizes of the arguments. In the case of multiplication of polynomials of sizes N and M with respect to a given variable, the size of the result should be N + M - 1 when N and M are nonzero, and zero when either of the sizes is zero.
+3. **Converting Constructor (Single-Argument):**  
+   A constructor taking an argument of a type convertible to T should create a polynomial of size 1.
 
-You must implement a specialization of the std::common_type template and the helper type std::common_type_t. If we denote the coefficient types of the polynomials by U and V, the coefficient type of the resulting polynomial should be std::common_type_t<U, V>.
+4. **Multi-Argument Constructor (Two or More Arguments):**  
+   This constructor creates a polynomial whose coefficients are initialized to the values of the successive arguments. The number of arguments should not exceed the polynomial's size N, and each argument should be an rvalue reference of a type convertible to T, utilizing perfect forwarding (see `std::forward`).
 
-Indexing Operator
+*Note:* You should make use of `std::is_convertible` and the concept `std::convertible_to` where appropriate.
 
-You need to implement the operator[](std::size_t i) in both non-const and const versions, returning a reference to the coefficient value aᵢ of the polynomial.
+Since the above constructors do not allow the creation of a polynomial of size one (i.e., a constant) whose only coefficient is itself a polynomial, you must also implement a function `const_poly`, whose argument is a polynomial `p` (an object of type `poly`) and which returns a polynomial of size one whose solitary coefficient is `p`.
 
-Method at
+Furthermore, provide appropriate deduction guides to allow creation of `poly` objects without specifying the template parameters explicitly.
 
-You need to implement two versions of the at method, which evaluates the polynomial.
+## Assignment Operators
 
-  1. The first version of the at method applies arguments to the polynomial as a function of several variables. The number of arguments k may be different from the number of variables n. This is because a polynomial of n variables can be treated as a polynomial of k variables, where the coefficients are polynomials of size max(n − k, 0). Thus, k = 0 or k > n is allowed. In the first case, the result is the original polynomial. In the second case, the extra arguments are ignored, since the variables xᵢ for i > n do not occur in the polynomial.
+Implement copy and move assignment operators that take arguments of type `const poly<U, M>&` and `poly<U, M>&&`, respectively, where M ≤ N and U is convertible to T.
 
-  2. The second version of the at method has an argument of type const std::array<U, K>&. Then, if the contents of the argument are {v₁, …, vₖ}, the call is equivalent to at(v₁, …, vₖ).
+## Arithmetic Operators
 
-The arguments of at can be of any types for which it is possible to evaluate the polynomial. In particular, they can also be polynomials.
+Implement the arithmetic operators `+=`, `-=`, and `*=` as member functions. For operators `+=` and `-=`, the argument may be a polynomial (of type `const poly<U, M>&`, M ≤ N and U convertible to T) or a constant reference to a value of some type convertible to T.
 
-Method size
+Also implement the binary operators `+`, `-`, and `*`, as well as the unary minus operator. For the binary operators, three versions should be possible by using appropriate concepts:
 
-You must implement the size method, which returns the size of the polynomial.
+- Only the left operand is a polynomial.
+- Only the right operand is a polynomial.
+- Both operands are polynomials.
 
-Function cross
+The type of the result should be the smallest type that can contain the resulting polynomial and should be deducible at compile time. In the case of addition or subtraction, for a given variable, the result's size should be the maximum of the sizes of the operands. In the case of multiplication of polynomials with sizes N and M (with respect to a given variable), the result's size should be N + M - 1 if both N and M are nonzero; if either size is zero, then the result is zero.
 
-You must implement a binary function cross that performs the multiplication of polynomials according to the formula:
+Implement a specialization of the template `std::common_type` and a helper type alias `std::common_type_t` so that, if the coefficient types of the polynomials are U and V, the coefficient type of the resulting polynomial is `std::common_type_t<U, V>`.
 
-  cross(p, q)(x₁, …, xₙ, y₁, …, yₘ) = p(x₁, …, xₙ) · q(y₁, …, yₘ),
+## Indexing Operator
 
-where p and q are polynomials in n and m variables respectively, and the resulting polynomial has n + m variables.
+Implement the indexing operator `operator[](std::size_t i)` in both non-const and const versions, returning a reference to the coefficient aᵢ of the polynomial.
 
+## Method `at`
+
+Implement two versions of the method `at` for evaluating the polynomial:
+
+1. **Variadic Version:**  
+   Applies the arguments to the polynomial as if it were a function of several variables. The number of arguments *k* may differ from the number of variables *n*. This is because a polynomial in *n* variables can be treated as a polynomial in *k* variables, where the coefficients are polynomials of size `max(n − k, 0)`. Thus, *k* may be 0 or greater than *n*. In the first case, the result is the original polynomial. In the second case, the extra arguments are ignored, since the variables xᵢ for i > n do not appear in the polynomial.
+
+2. **`std::array` Version:**  
+   A version of `at` that accepts an argument of type `const std::array<U, K>&`. If the array contains `{v₁, …, vₖ}`, then the call is equivalent to invoking `at(v₁, …, vₖ)`.
+
+Arguments to `at` can be of any types for which it is possible to evaluate the polynomial. In particular, they may also be polynomials.
+
+## Method `size`
+
+Implement a method `size` that returns the size of the polynomial.
+
+## Function `cross`
+
+Implement a two-argument function `cross` that performs the multiplication of polynomials according to the formula:
+
+  cross(p, q)(x₁, …, xₙ, y₁, …, yₘ) = p(x₁, …, xₙ) * q(y₁, …, yₘ),
+
+where *p* and *q* are polynomials in *n* and *m* variables respectively, and the resulting polynomial has *n + m* variables.
+
+## Additional Requirements
+
+- All constructors, methods, and functions you define must be marked with `constexpr`, so that they can be used at compile time.
+- You may assume that the coefficient type T, if it is not itself a `poly`, provides:
+  - A default constructor that creates the zero element,
+  - Copy and move constructors,
+  - An assignment operator,
+  - The operators `+=`, `-=`, `*=`,
+  - The binary operators `+`, `-`, `*`, and
+  - The unary operator `-`.
+- Any helper definitions should be hidden from the global scope (for example, inside a namespace named `detail`).
+
+This concludes the specification for the Polynomials module.
