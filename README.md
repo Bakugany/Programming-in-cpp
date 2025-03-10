@@ -1,2 +1,1 @@
-# Programming-in-cpp
-Project from course of programming in c++ at University of Warsaw.
+This repository contains projects that I have done at my course in programming in c++ language at Univeristy of Warsaw.
